@@ -190,6 +190,8 @@
 
         return `
           <div class="forecast-details">
+            ${meta.cached ? '<p class="cached-info">(Data from cache)</p>' : ''}
+            </br>
             ${location}
             <div class="current-forecast">
               ${today}
@@ -200,8 +202,7 @@
                 <strong>Upcoming:</strong>
                 ${upcoming}
               </div>
-            ` : ''}
-            ${meta.cached ? '<p class="cached-info">(Data from cache)</p>' : ''}
+            ` : ''} 
           </div>
         `;
       }
