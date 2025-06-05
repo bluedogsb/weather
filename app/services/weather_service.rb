@@ -154,7 +154,7 @@ class WeatherService
     today = periods.select{|p| p["name"] == "Today"}.first
     tonight = periods.select{|p| p["name"] == "Tonight"}.first
 
-    upcoming_start = 0
+    upcoming_start = 1
     upcoming_start += 1 if today.present?
     upcoming_start += 1 if tonight.present?
 
