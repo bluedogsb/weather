@@ -6,10 +6,11 @@ class WeatherService
   end
 
   def get_forecast(address)
+    address = "#{address}, USA"
     coordinates = get_coordinates(address)
 
-    puts "*" * 40
-    puts "coordinates: #{coordinates}"
+    # puts "*" * 40
+    # puts "coordinates: #{coordinates}"
 
     coordinates = {
       latitude: coordinates[:latitude].round(3),
@@ -19,8 +20,8 @@ class WeatherService
     return nil unless coordinates
 
     zip_code = get_zip_code(address)
-    puts "*" * 40
-    puts "get_zip_code: #{zip_code}"
+    # puts "*" * 40
+    # puts "get_zip_code: #{zip_code}"
     
     # cached = false
 
@@ -78,8 +79,8 @@ class WeatherService
     # puts "parsed forecast: #{ap forecast}"
 
     # Cache by zip code if available
-    puts "*" * 40
-    puts "---------- zip_code: #{zip_code}"
+    # puts "*" * 40
+    # puts "---------- zip_code: #{zip_code}"
     if zip_code
       puts "*" * 40
       puts "----- zip_code cache WRITE: #{zip_code}"
@@ -96,15 +97,15 @@ class WeatherService
   def get_coordinates(address)
     geocoder_results = Geocoder.search(address)
 
-    puts "*"*40 
-    puts "get_coordinates: #{ap geocoder_results}"
+    # puts "*"*40 
+    # puts "get_coordinates: #{ap geocoder_results}"
 
     return nil if geocoder_results.empty?
 
     data = geocoder_results.select{|r| r.data["address"]["country"] == "United States"}.first
 
-    puts "*"*40 
-    puts "get_coordinates data: #{ap data}"
+    # puts "*"*40 
+    # puts "get_coordinates data: #{ap data}"
 
     if data.present?
       { 
