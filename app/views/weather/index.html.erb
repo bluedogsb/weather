@@ -1,0 +1,210 @@
+<div class="weather-container">
+  <div class="weather-form">
+    <h1>Weather Forecast</h1>
+    
+    <%= form_tag api_v1_weather_forecast_path, method: :get, class: "location-form", data: { turbo: false } do %>
+      <div class="form-group">
+        <%= label_tag :address, "Enter Location (City, Zip Code, or Address)" %>
+        <%= text_field_tag :address, nil, class: "form-control", placeholder: "e.g., New York, NY or 90210", required: true %>
+      </div>
+      
+      <%= submit_tag "Get Forecast", class: "submit-button" %>
+    <% end %>
+  </div>
+
+  <div id="weather-results" class="weather-results" style="display: none;">
+    <h2>Weather Forecast Results</h2>
+    <div id="forecast-data"></div>
+  </div>
+</div>
+
+<% content_for :head do %>
+  <style>
+    .weather-container {
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    .weather-form {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #555;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    .submit-button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .submit-button:hover {
+      background-color: #0056b3;
+    }
+
+    .weather-results {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .location {
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .period-forecast {
+      padding: 1rem;
+      margin: 0.5rem 0;
+      background: #f8f9fa;
+      border-radius: 6px;
+      line-height: 1.6;
+    }
+
+    .period-forecast img {
+      vertical-align: middle;
+      margin-left: 0.5rem;
+    }
+
+    .upcoming-forecast {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #eee;
+    }
+
+    .upcoming-forecast > strong {
+      display: block;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .error {
+      color: #dc3545;
+      padding: 1rem;
+      background-color: #f8d7da;
+      border-radius: 4px;
+      margin-top: 1rem;
+    }
+
+    .cached-info {
+      color: #6c757d;
+      font-style: italic;
+      margin-top: 0.5rem;
+    }
+  </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.querySelector('.location-form');
+      const resultsDiv = document.getElementById('weather-results');
+      const forecastDataDiv = document.getElementById('forecast-data');
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const address = document.getElementById('address').value;
+        
+        try {
+          const response = await fetch(`/api/v1/weather/forecast?address=${encodeURIComponent(address)}`);
+          const data = await response.json();
+          
+          if (response.ok) {
+            resultsDiv.style.display = 'block';
+            forecastDataDiv.innerHTML = formatWeatherData(data);
+          } else {
+            throw new Error(data.error || 'Failed to fetch weather data');
+          }
+        } catch (error) {
+          resultsDiv.style.display = 'block';
+          forecastDataDiv.innerHTML = `<div class="error">${error.message}</div>`;
+        }
+      });
+
+      function formatPeriod(data) {
+        if (!data) return '';
+        
+        console.log("formatPeriod data['name']: " + data['name']);
+
+        return `
+          <div class="period-forecast">
+            <strong>${data["name"]}:</strong> 
+            ${data["temperature"]}°${data["temperatureUnit"]}
+            <img src='${data["icon"]}' height='14px' width='14px' >
+            <br>
+            <strong>Wind:</strong> 
+            ${data["windSpeed"]} ${data["windDirection"]}
+            <br>
+            <strong>Rain Chance:</strong> 
+            ${data["probabilityOfPrecipitation"]["value"]}%
+            <br>
+            <strong>Forecast:</strong> 
+            ${data["detailedForecast"]}
+          </div>
+        `;
+      }
+
+      function formatWeatherData(data) {
+        const forecast = data.data;
+        const meta = data.meta;
+        
+        let location = `<div class="location"><strong>Location:</strong> ${forecast.location}</div>`;
+        let today = formatPeriod(forecast.today);
+        let tonight = formatPeriod(forecast.tonight);
+        
+        // Map upcoming forecasts to HTML strings and join them
+        let upcoming = forecast.upcoming ? forecast.upcoming.map(data => formatPeriod(data)).join('') : '';
+
+        return `
+          <div class="forecast-details">
+            ${location}
+            <div class="current-forecast">
+              ${today}
+              ${tonight}
+            </div>
+            ${upcoming ? `
+              <div class="upcoming-forecast">
+                <strong>Upcoming:</strong>
+                ${upcoming}
+              </div>
+            ` : ''}
+            ${meta.cached ? '<p class="cached-info">(Data from cache)</p>' : ''}
+          </div>
+        `;
+      }
+    });
+  </script>
+<% end %> 
